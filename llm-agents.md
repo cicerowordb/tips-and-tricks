@@ -65,6 +65,19 @@ codex login --device-auth
     - Open the URL and paste the code.
     - This must be enabled in ChatGPT settings first.
 
+- Include `caveman` plugin:
+    ```
+    npx skills add JuliusBrussee/caveman
+    ```
+    - Select skills to install. Select with `space` and confirm with `enter`. I commonly select only `caveman`.
+    - Select agents. Codex is the focus in this case.
+    - Scope: Global.
+    - Method: Symlink.
+    - Proceed: Yes.
+    - Install the `find-skills`: Yes.
+    - Note: It is not available in Codex for Windows plugin list. But it appears as an installed plugin if installed on Codex-CLI on WSL (after restart Codex and/or Windows).
+
+
 ## Aider + Groq or Mistral
 
 - Install Aider:
