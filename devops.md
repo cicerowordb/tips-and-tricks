@@ -90,7 +90,7 @@ I recommend running the second-to-last command in another terminal so the k3s lo
 
 ### Install Kubectl
 ```bash
-KUBECTL_VERSION='1.29.6'
+KUBECTL_VERSION='1.35.4'
 curl -LO "https://dl.k8s.io/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl"
 sudo chmod +x kubectl
 sudo mv kubectl /usr/local/bin
@@ -110,7 +110,7 @@ rm -f get_helm.sh
 Check new versions: [https://releases.hashicorp.com/terraform](https://releases.hashicorp.com/terraform)
 
 ```bash
-VERSIONS='1.12.2 1.3.6'
+VERSIONS='1.15.2 1.14.9 1.13.5 1.12.2'
 for version in $VERSIONS
 do
   wget -c https://releases.hashicorp.com/terraform/"$version"/terraform_"$version"_linux_amd64.zip -O terraform_"$version".zip
@@ -120,6 +120,7 @@ done
 FIRST_VERSION=$(cut -d' ' -f1 <<< $VERSIONS)
 sudo ln -s /usr/local/bin/terraform_$FIRST_VERSION /usr/local/bin/terraform
 rm -f *.zip
+terraform version
 ```
 
 ### Install Kustomize
@@ -132,7 +133,7 @@ kustomize version
 ### YQ
 Install:
 ```bash
-VERSION=v4.2.0 BINARY=yq_linux_amd64; \
+VERSION=v4.53.2 BINARY=yq_linux_amd64; \
     sudo wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY} \
     -O /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq
 ```
@@ -170,9 +171,8 @@ apt install -y hub
 
 ## Ansible via Pip
 ```bash
-sudo apt install python3 python3-pip python3-venv
-pip3 install ansible==7.1.0
-ln -s ~/.local/lib/python3.10/site-packages/ansible* /usr/local/bin/
+sudo apt install python3 python3-pip python3-venv ansible
+ansible --version
 ```
 
 ### Ansible new project
@@ -269,7 +269,7 @@ Check Istio x Kubernetes compatibility: [https://istio.io/latest/docs/releases/s
 
 ```bash
 # Download
-export ISTIO_VERSION=1.22.2 TARGET_ARCH=x86_64
+export ISTIO_VERSION=1.29.2 TARGET_ARCH=x86_64
 kubectl create ns istio-system
 curl -sL https://istio.io/downloadIstio| sh - > /dev/null
 
@@ -286,6 +286,9 @@ kubectl -n istio-system apply -f istio-$ISTIO_VERSION/samples/addons/jaeger.yaml
 # Extras
 kubectl -n istio-system apply -f istio-$ISTIO_VERSION/samples/addons/extras/skywalking.yaml
 kubectl -n istio-system apply -f istio-$ISTIO_VERSION/samples/addons/extras/zipkin.yaml
+
+# Check
+kubectl -n istio-system get all,secret,cm,sa
 ```
 
 ## Trivy for images scan
@@ -295,10 +298,13 @@ Installation
 - Check for new versions [https://github.com/aquasecurity/trivy/releases/](https://github.com/aquasecurity/trivy/releases/)
 
 ```bash
+TRIVY_VERSION=0.70.0
 cd /tmp
-wget https://github.com/aquasecurity/trivy/releases/download/v0.18.3/trivy_0.18.3_Linux-64bit.tar.gz
-tar xf trivy_0.18.3_Linux-64bit.tar.gz
+wget https://github.com/aquasecurity/trivy/releases/download/v$TRIVY_VERSION/trivy_$TRIVY_VERSION_Linux-64bit.tar.gz
+tar xf trivy_$TRIVY_VERSION_Linux-64bit.tar.gz
 sudo cp trivy /usr/local/bin
+trivy version
+cd -
 ```
 
 Scan images
