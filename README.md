@@ -98,4 +98,4 @@ A curated collection of notes for Linux, DevOps, Kubernetes, Docker, security, p
 - [Gemini CLI](llm-agents.md#gemini-cli)
 - [Codex CLI](llm-agents.md#codex-cli)
 - [Aider + Groq or Mistral](llm-agents.md#aider-groq-or-mistral)
-
+- [OpenCode + Ollama Model](llm-agents.md#opencode--ollama-model)

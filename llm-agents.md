@@ -65,19 +65,6 @@ codex login --device-auth
     - Open the URL and paste the code.
     - This must be enabled in ChatGPT settings first.
 
-- Include `caveman` plugin:
-    ```
-    npx skills add JuliusBrussee/caveman
-    ```
-    - Select skills to install. Select with `space` and confirm with `enter`. I commonly select only `caveman`.
-    - Select agents. Codex is the focus in this case.
-    - Scope: Global.
-    - Method: Symlink.
-    - Proceed: Yes.
-    - Install the `find-skills`: Yes.
-    - Note: It is not available in Codex for Windows plugin list. But it appears as an installed plugin if installed on Codex-CLI on WSL (after restart Codex and/or Windows).
-
-
 ## Aider + Groq or Mistral
 
 - Install Aider:
@@ -114,3 +101,47 @@ aider --model mistral/mistral-large-latest
 ```
 - Check usage at [https://admin.mistral.ai/organization/usage](https://admin.mistral.ai/organization/usage).
 
+# Opencode + Ollama model
+
+- Install opencode
+    ```
+    curl -fsSL https://opencode.ai/install | bash
+    ```
+    - Create a config file:
+        ```
+        mkdir -p ~/.config/opencode || :
+        mv ~/.config/opencode/opencode.json ~/.config/opencode/opencode.json.$(date +"%Y-%m-%d_%H-%M-%S") || :
+        ```
+    - Include configuration (I selected Qwen3.5:8b):
+        ```
+        echo '
+        {
+            "$schema": "https://opencode.ai/config.json",
+            "provider": {
+                "ollama": {
+                    "npm": "@ai-sdk/openai-compatible",
+                    "name": "Ollama (local)",
+                    "options": {
+                        "baseURL": "http://localhost:11434/v1"
+                    },
+                    "models": {
+                        "qwen3.5:4b": {
+                        "name": "qwen3.5:4b"
+                        }
+                    }
+                }
+            }
+        }
+        ' > ~/.config/opencode/opencode.json
+        ```
+    - Access the correct directory and run opencode:
+        ```
+        source ~/.bashrc
+        opencode
+            /models
+            # select Ollama (local) qwen3.5:4b
+        ```
+
+References:
+- [https://opencode.ai/download](https://opencode.ai/download)
+- [https://opencode.ai/docs/providers/#ollama](https://opencode.ai/docs/providers/#ollama)
