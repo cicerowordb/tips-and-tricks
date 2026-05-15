@@ -123,6 +123,169 @@ rm -f *.zip
 terraform version
 ```
 
+## Terragrunt
+
+- Install:
+```bash
+sudo wget https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64 -O /usr/local/bin/terragrunt
+sudo chmod +x /usr/local/bin/terragrunt
+```
+
+- Create directories and files:
+```bash
+mkdir -p infra-modules/simple-app nonprod prod
+
+files='
+infra-modules/simple-app/main.tf
+infra-modules/simple-app/variables.tf
+nonprod/terragrunt.hcl
+prod/terragrunt.hcl
+terragrunt.hcl
+'
+for x in $files;
+do 
+    echo > $x
+done
+```
+
+- Result:
+```txt
+├── infra-modules
+│   └── simple-app
+│       ├── main.tf
+│       └── variables.tf
+├── nonprod
+│   └── terragrunt.hcl
+├── prod
+│   └── terragrunt.hcl
+└── terragrunt.hcl
+```
+
+```bash
+cat <<EOTF > infra-modules/simple-app/variables.tf
+variable "env_name" {}
+variable "api_key" { sensitive = true }
+EOTF
+
+cat <<EOTF > infra-modules/simple-app/main.tf
+resource "null_resource" "exec" {
+  provisioner "local-exec" {
+    command = "echo 'Running in \${var.env_name}. API Key length: \${length(var.api_key)}'"
+  }
+}
+EOTF
+
+cat <<EOTF > terragrunt.hcl
+generate "backend" {
+  path      = "backend.tf"
+  if_exists = "overwrite_terragrunt"
+  contents = <<EOF
+terraform {
+  backend "local" {}
+}
+EOF
+}
+
+# Automatically generates the backend file in all subdirectories
+remote_state {
+  backend = "local"
+  config = {
+    path = "\${get_parent_terragrunt_dir()}/states/\${path_relative_to_include()}/terraform.tfstate"
+  }
+}
+
+# Automatically generates the provider.tf file
+generate "provider" {
+  path      = "provider.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<EOF
+provider "aws" { region = "us-east-1" } # Placeholder only
+EOF
+}
+EOTF
+
+cat <<EOTF > nonprod/terragrunt.hcl
+include "root" {
+  path = find_in_parent_folders()
+}
+
+# Where is the Terraform code?
+terraform {
+  source = "../infra-modules/simple-app"
+
+  # HOOKS: Automate commands before, after, or on error
+  before_hook "before_everything" {
+    commands = ["apply", "plan"]
+    execute  = ["echo", ">>> Verifying prerequisites in NON-PROD..."]
+  }
+
+  after_hook "after_everything" {
+    commands = ["apply"]
+    execute  = ["echo", ">>> NON-PROD infra applied successfully!"]
+  }
+
+  error_hook "on_failure" {
+    commands = ["apply"]
+    on_errors = [".*"]
+    execute  = ["echo", ">>> ALERT: An error occurred in the NON-PROD Apply!"]
+  }
+}
+
+# VARIABLES (Inputs)
+inputs = {
+  env_name = "non-production"
+  
+  # SECRET STRATEGY: 
+  # Fetch from a system/pipeline environment variable (TF_VAR_api_key)
+  # Or use the Terragrunt get_env function
+  api_key  = get_env("SECRET_API_KEY", "default-secret-if-not-set")
+}
+EOTF
+
+cat <<EOTF > prod/terragrunt.hcl
+# 1. Inherits all Backend and Provider configuration from the parent file (../terragrunt.hcl)
+include "root" {
+  path = find_in_parent_folders()
+}
+
+# 2. Points to the same source code (Module) that nonprod used
+terraform {
+  source = "../infra-modules/simple-app"
+
+  # PRODUCTION HOOKS: Usually more rigorous
+  before_hook "prod_validation" {
+    commands = ["apply"]
+    # Example: A script checking if we're on the 'main' branch or if it's business hours
+    execute  = ["echo", ">>> [CRITICAL] Starting deploy in PRODUCTION. Verifying Admin permissions..."]
+  }
+
+  after_hook "success_notification" {
+    commands = ["apply"]
+    # Here you could trigger a curl for a Slack or Teams Webhook
+    execute  = ["echo", ">>> PROD deploy finished. Sending metrics to Grafana..."]
+  }
+}
+
+# 3. VARIABLES: Define what actually changes between environments here
+inputs = {
+  env_name = "PRODUCTION-SERVER-01"
+  
+  # Secret Strategy: In PROD, we could force the key to come 
+  # mandatorily from a GitLab environment variable, without fallback.
+  api_key  = get_env("PROD_API_KEY") 
+}
+EOTF
+
+terragrunt init
+
+terragrunt plan
+
+cd nonprod/; terragrunt apply -auto-approve; cd ..
+
+export PROD_API_KEY=AAABBBCCCDDDEEE111222333 #Secret
+cd prod/;    terragrunt apply -auto-approve; cd ..
+unset PROD_API_KEY
+
 ### Install Kustomize
 ```bash
 curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"  | bash
