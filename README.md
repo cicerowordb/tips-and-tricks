@@ -41,6 +41,7 @@ A curated collection of notes for Linux, DevOps, Kubernetes, Docker, security, p
 - [ACT for local GitHub Actions](devops.md#act---github-actions-locally)
 - [Install Istio](devops.md#install-istio)
 - [Trivy image scanning](devops.md#trivy-for-images-scan)
+- [Floci](devops.md#floci)
 
 ## Kubernetes
 - [NFS Manual](kubernetes.md#nfs-manual)

@@ -494,3 +494,36 @@ Scan a Dokerfile
 ```bash
 trivy config Dockerfile
 ```
+
+## Floci
+
+Floci is a fast, free, and open-source local AWS service emulator. It solves the challenges of high cloud costs, slow development cycles, and privacy concerns by providing a local environment that mimics AWS services with zero telemetry and full compatibility with standard AWS SDKs and CLI tools.
+
+```bash
+mkdir data
+docker run --name floci-aws -d \
+       -v ./data:/app/data \
+       -v /var/run/docker.sock:/var/run/docker.sock \
+       -p 4566:4566 \
+       floci/floci:latest
+aws --endpoint-url http://localhost:4566 s3 mb s3://file-storage
+aws --endpoint-url http://localhost:4566 s3 ls
+aws --endpoint-url http://localhost:4566 s3 rm s3://file-storage
+aws --endpoint-url http://localhost:4566 s3 ls
+docker rm --force floci-aws
+```
+
+The volume to map `/var/run/docker.sock` gives Floci the ability to run new containers, needed by EC2 service (and others). Remove it if you think this is a potential security problem in your environment.
+
+If you want the support of other operating systems for EC2 instances use:
+
+```bash
+docker run --name floci-aws -d \
+       -e AMI_IMAGE_MAPPING=ami-01:public.ecr.aws/amazonlinux/amazonlinux:2,ami-02:public.ecr.aws/ubuntu/ubuntu:22.04,ami-03:public.ecr.aws/docker/library/debian:12 \
+       -v /var/run/docker.sock:/var/run/docker.sock \
+       -v ./data:/app/data \
+       -p 4566:4566 \
+       floci/floci:latest
+```
+
+Tests were made in a Windows computer with 24GB of RAM and NVIDIA GTX 1650 with 4GB of VRAM. All commands were installed in a Debian WSL environment.
