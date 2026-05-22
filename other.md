@@ -403,6 +403,8 @@ host -t SOA amicomcariri.com.br
 
 # Audio transcript
 
+- FFMPEG command is needed: `sudo apt install ffmpeg`
+
 1. Check CUDA version. 
 ```bash
 nvidia-smi
@@ -413,6 +415,13 @@ nvidia-smi
 pip install torch torchvision torchaudio \
     --index-url https://download.pytorch.org/whl/cu130
 ```
+
+On debian use:
+```bash
+sudo apt update
+sudo apt install python3-torch python3-torchvision python3-torchaudio
+```
+
 
 3. Install whisper:
 ```bash
