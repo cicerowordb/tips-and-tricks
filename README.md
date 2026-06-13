@@ -102,3 +102,6 @@ A curated collection of notes for Linux, DevOps, Kubernetes, Docker, security, p
 - [Codex CLI](llm-agents.md#codex-cli)
 - [Aider + Groq or Mistral](llm-agents.md#aider-groq-or-mistral)
 - [OpenCode + Ollama Model](llm-agents.md#opencode--ollama-model)
+    - [Gemini CLI subagent for OpenCode](llm-agents.md#gemini-cli-subagent-for-opencode)
+    - [Frontend-design Skill](llm-agents.md#frontend-design-skill)
+- [Agent Skills](llm-agents.md#agent-skills)

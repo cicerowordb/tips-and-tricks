@@ -101,11 +101,13 @@ aider --model mistral/mistral-large-latest
 ```
 - Check usage at [https://admin.mistral.ai/organization/usage](https://admin.mistral.ai/organization/usage).
 
-# Opencode + Ollama model
+## Opencode + Ollama model
 
 - Install opencode
     ```
     curl -fsSL https://opencode.ai/install | bash
+    # OR
+    npm i -g opencode-ai
     ```
     - Create a config file:
         ```
@@ -141,7 +143,184 @@ aider --model mistral/mistral-large-latest
             /models
             # select Ollama (local) qwen3.5:4b
         ```
+- OpenCode using Codex tier for ChatGPT Pro/Plus.
+    - `/connect`
+    - Select `OpenAI`
+    - Select `ChatGPT Pro/Plus`
+    - Click on link
+    - Authenticate in your browser
+- It is not possible to use a Gemini-CLI tier, but I solved this using it as OpenCode Agent (see below).
+
+Notes:
+- Desktop available for macOS (Apple Silicon/Intel), Windows (x64), Linux (.deb/.rpm).
+- OpenCode Extensions available for VS Code, Cursor, Zed, Windsurf, VSCodium.
+- [Zen](https://opencode.ai/zen) models are free from OpenCode project.
+    - It is possible to include credits.
+- Agents:
+    - `@general` is the default agent.
+    - `@explore` is a read only agent to find information.
+
+Shortcuts:
+- Help: `ctrl+p`
+- Change mode (Plan/Build): `tab`
+- Change to shell mode: `!`
+- The prefix shortcut is `ctrl+x`
+    - Models: `m`
+    - Editor: `e`
+    - New session: `n`
+    - Switch session: `l`
+    - Compact context: `c`
+    - Undo: `u`
+    - Sidebar: `b`
+    - Switch agent: `a`
+    - Switch theme: `t`
+- Change variant/effort: `ctrl+t`
+- Navigate: `pg-up` and `pg-down`
+
+Main slash commands:
+- `/models`: selects a model (some free by default).
+- `/variants`: change variant.
+- `/init`: creates an AGENTS.md for context control.
+- `/diff`: diff viewer for git changes.
+- `/compact`: helps to control the context usage.
+- `/agents`: switches agents (plan and build by default).
+- `/undo`: rolls back the last AI prompt or code modification request.
+- `/editor`: opens editor for multiline prompt.
+- `/sessions`: shows a list of previous workspace projects to load or resume.
+
+### Gemini-CLI Subagent for OpenCode
+
+#### 1. Create a Gemini subagent in `.opencode/agents/gemini.md`
+
+```bash
+mkdir -p ~/.config/opencode/agents/ || :
+echo > ~/.config/opencode/agents/gemini.md
+cat <<EOF > ~/.config/opencode/agents/gemini.md
+---
+description: Query Gemini CLI free tier without API costs. Use @gemini when you want gemini's answer alongside your primary model.
+mode: subagent
+permission:
+  bash:
+    "gemini -p *": allow
+    "*": deny
+---
+
+You are a bridge to the pre-authenticated Gemini CLI (`gemini`). 
+Gemini is already logged in and ready — do NOT attempt to configure or authenticate it.
+
+When asked a question, run:
+
+  gemini -p 'the question here'
+
+Return Gemini's response verbatim. Keep prompts concise.
+EOF
+```
+#### 2. Test
+
+We can verify the agent works by:
+
+- Running `gemini -p 'Say hello in one word'` directly to confirm the CLI works.
+- Then from inside opencode, invoking `@gemini Say hello in one word` to confirm the agent routes correctly.
+- I also tested from inside opencode with this prompt and I enjoyed the result:
+    - `send the content of .bashrc to @gemini agent and request a commented version. save the comented version in bashrc-commented.`
+
+#### 3. Other details
+- Where to create the agent 
+    - project-local (`./.opencode/agents/gemini.md`) 
+    - or global (`~/.config/opencode/agents/gemini.md`)?
+
+### Frontend-design Skill
+
+```bash
+mkdir -p ~/.config/opencode/skills/frontend-design/
+echo > ~/.config/opencode/skills/frontend-design/SKILL.md
+curl -sSfL https://raw.githubusercontent.com/anthropics/skills/refs/heads/main/skills/frontend-design/SKILL.md >  ~/.config/opencode/skills/frontend-design/SKILL.md
+```
+
+Restart opencode if needed. To use it, just ask something related to the skill or use `/skill` command and choose `frontend-design` from the list.
+
+> You can use `./.opencode/skills/frontend-design/SKILL.md` to use inside a project intead of a global installation.
 
 References:
 - [https://opencode.ai/download](https://opencode.ai/download)
 - [https://opencode.ai/docs/providers/#ollama](https://opencode.ai/docs/providers/#ollama)
+- [https://opencode.ai/zen](https://opencode.ai/zen)
+
+## Agent Skills
+
+Skills are reusable instruction sets that teach an AI agent how to handle specific tasks — coding style, design decisions, domain conventions, tool usage patterns.
+
+### Anatomy
+
+Each skill lives in its own directory with a `SKILL.md`:
+
+```yaml
+---
+name: skill-name
+description: When this skill should trigger (used for automatic matching)
+---
+# Skill Title
+
+Instructions for the agent. Use imperative tone, explain the *why*
+behind constraints, and be specific about output formats and workflows.
+```
+
+Optional bundled resources:
+```
+skill-name/
+├── SKILL.md        # Required: frontmatter + instructions
+├── scripts/        # Reusable scripts for deterministic tasks
+├── references/     # Docs loaded into context on demand
+└── assets/         # Templates, icons, fonts, etc.
+```
+
+### How they work
+
+- **Description** (frontmatter) — always in context, used to decide if the skill applies
+- **Body** (SKILL.md) — loaded when the skill is triggered
+- **Bundled files** — loaded on demand; scripts can execute without loading into context
+
+### Where to find skills
+
+- **Public library**: [github.com/anthropics/skills](https://github.com/anthropics/skills) — frontend-design, mcp-builder, pdf, pptx, xlsx, and more
+- **Community**: various repos and gists
+
+### Using skills
+
+**Opencode:**
+- Global: `~/.config/opencode/skills/<name>/SKILL.md`
+- Project-local: `./.opencode/skills/<name>/SKILL.md`
+- Trigger: `/skill` command or mention the skill name naturally; the agent consults it when the task matches its description
+
+**Gemini-CLI:**
+```bash
+gemini skills add <path/to/skill>
+gemini skills list
+```
+
+**Claude Code:** skills go in the project's `.claude/skills/` directory or a configured global path.
+
+### Python Skills
+- [https://raw.githubusercontent.com/ludo-technologies/python-best-practices/refs/heads/main/skills/coding-standards/SKILL.md](https://raw.githubusercontent.com/ludo-technologies/python-best-practices/refs/heads/main/skills/coding-standards/SKILL.md)
+- [https://github.com/ludo-technologies/python-best-practices/blob/main/skills/tooling/SKILL.md](https://github.com/ludo-technologies/python-best-practices/blob/main/skills/tooling/SKILL.md)
+
+### Terraform Skills
+- [https://github.com/hashicorp/agent-skills/tree/main/terraform](https://github.com/hashicorp/agent-skills/tree/main/terraform)
+    - code-generation:
+        - azure-verified-modules
+        - terraform-search-import
+        - terraform-style-guide
+        - terraform-test
+    - module-generation:
+        - refactor-module
+        - terraform-stacks
+    - provider-development:
+        - new-terraform-provider
+        - provider-actions
+        - provider-docs
+        - provider-resources
+        - provider-test-patterns
+        - run-acceptance-tests
+
+### Bash Skills
+- [https://raw.githubusercontent.com/bentsolheim/public-skills/refs/heads/main/skills/bash/SKILL.md](https://raw.githubusercontent.com/bentsolheim/public-skills/refs/heads/main/skills/bash/SKILL.md)

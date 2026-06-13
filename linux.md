@@ -139,11 +139,12 @@ tmux new-window vim ~/.bashrc
 
 Copy mode
 
-```bash
+```
 Roll text:                       pfx + PageUp (Esc to cancel)
-Select text:                     Ctrl+space - arrows
+Copy mode:                       pfx + [
+Select text:                     Space - arrows
 Clean selection                  Ctrl+G
-Copy selection / exit copy mode: Alt+w
+Copy selection / exit copy mode: Enter
 Paste selection:                 pfx + ]
 Search:                          Ctrl+s <term> <enter> / n (to next)
 ```
