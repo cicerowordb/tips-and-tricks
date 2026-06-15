@@ -222,7 +222,7 @@ We can verify the agent works by:
 - Running `gemini -p 'Say hello in one word'` directly to confirm the CLI works.
 - Then from inside opencode, invoking `@gemini Say hello in one word` to confirm the agent routes correctly.
 - I also tested from inside opencode with this prompt and I enjoyed the result:
-    - `send the content of .bashrc to @gemini agent and request a commented version. save the comented version in bashrc-commented.`
+    - `send the content of .bashrc to @gemini agent and request a commented version. save the commented version in bashrc-commented.`
 
 #### 3. Other details
 - Where to create the agent 
